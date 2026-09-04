@@ -1,6 +1,6 @@
 # io
 
-个人学术主页的静态骨架，参考极简学术 portfolio 的信息结构设计，可直接部署到 GitHub Pages。
+个人学术主页的静态骨架，参考极简学术 portfolio 的信息结构设计，已部署至 <https://micrali.github.io/>。
 
 ## 本地预览
 
@@ -21,4 +21,4 @@ python -m http.server 8000
 
 ## 部署
 
-推送到 GitHub 后，在仓库 Settings → Pages 中选择 `Deploy from a branch`，分支使用 `main`，目录使用 `/ (root)`。
+仓库使用 GitHub 用户主页命名规则 `Micrali.github.io`。推送到 `main` 后，GitHub Pages 会从根目录自动发布至 <https://micrali.github.io/>。
