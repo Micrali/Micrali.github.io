@@ -1,50 +1,69 @@
 const header = document.querySelector("[data-header]");
 const menuButton = document.querySelector("[data-menu-button]");
 const menu = document.querySelector("[data-menu]");
-const navLinks = [...document.querySelectorAll('.nav-links a[href^="#"]')];
-const sections = [...document.querySelectorAll("main section[id]")];
-
-const updateHeader = () => {
-  header?.classList.toggle("is-scrolled", window.scrollY > 12);
-};
+const navAnchors = [...document.querySelectorAll('.nav-links a[href^="#"]')];
 
 const closeMenu = () => {
-  menu?.classList.remove("is-open");
-  menuButton?.setAttribute("aria-expanded", "false");
-  menuButton?.setAttribute("aria-label", "打开导航菜单");
+  if (!menuButton || !menu) return;
+  menuButton.setAttribute("aria-expanded", "false");
+  menu.classList.remove("is-open");
 };
 
 menuButton?.addEventListener("click", () => {
-  const isOpen = menu?.classList.toggle("is-open") ?? false;
-  menuButton.setAttribute("aria-expanded", String(isOpen));
-  menuButton.setAttribute("aria-label", isOpen ? "关闭导航菜单" : "打开导航菜单");
+  const isOpen = menuButton.getAttribute("aria-expanded") === "true";
+  menuButton.setAttribute("aria-expanded", String(!isOpen));
+  menu?.classList.toggle("is-open", !isOpen);
 });
 
-navLinks.forEach((link) => link.addEventListener("click", closeMenu));
+navAnchors.forEach((anchor) => anchor.addEventListener("click", closeMenu));
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeMenu();
+});
 
-window.addEventListener("scroll", updateHeader, { passive: true });
+const updateHeader = () => header?.classList.toggle("is-scrolled", window.scrollY > 12);
 updateHeader();
+window.addEventListener("scroll", updateHeader, { passive: true });
+
+const revealItems = [...document.querySelectorAll(".reveal")];
+if ("IntersectionObserver" in window) {
+  revealItems.forEach((item) => item.classList.add("is-pending"));
+  const revealObserver = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.remove("is-pending");
+        entry.target.classList.add("is-visible");
+        observer.unobserve(entry.target);
+      });
+    },
+    { threshold: 0.08, rootMargin: "0px 0px -5% 0px" },
+  );
+  revealItems.forEach((item) => revealObserver.observe(item));
+}
+
+const sections = navAnchors
+  .map((anchor) => document.querySelector(anchor.getAttribute("href")))
+  .filter(Boolean);
 
 if ("IntersectionObserver" in window) {
-  const observer = new IntersectionObserver(
+  const sectionObserver = new IntersectionObserver(
     (entries) => {
       const visible = entries
         .filter((entry) => entry.isIntersecting)
         .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-
       if (!visible) return;
-
-      navLinks.forEach((link) => {
-        link.classList.toggle(
-          "is-active",
-          link.getAttribute("href") === `#${visible.target.id}`,
-        );
+      navAnchors.forEach((anchor) => {
+        const active = anchor.getAttribute("href") === `#${visible.target.id}`;
+        anchor.classList.toggle("is-active", active);
+        if (active) anchor.setAttribute("aria-current", "location");
+        else anchor.removeAttribute("aria-current");
       });
     },
-    { rootMargin: "-20% 0px -64%", threshold: [0.05, 0.25, 0.5] },
+    { rootMargin: "-20% 0px -65% 0px", threshold: [0, 0.1, 0.35] },
   );
-
-  sections.forEach((section) => observer.observe(section));
+  sections.forEach((section) => sectionObserver.observe(section));
 }
 
-document.querySelector("[data-year]").textContent = new Date().getFullYear();
+document.querySelectorAll("[data-year]").forEach((item) => {
+  item.textContent = new Date().getFullYear();
+});
